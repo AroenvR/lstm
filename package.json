@@ -1,7 +1,7 @@
 {
   "name": "fact-or-fiction",
   "version": "0.1.0",
-  "description": "A part of the supervised stacked ensemble model combining an LSTM, a GMB and an SVM.",
+  "description": "The LSTM part of a supervised stacked ensemble model combining an LSTM, a GMB and an SVM.",
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
