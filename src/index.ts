@@ -1,101 +1,58 @@
 import * as tf from "@tensorflow/tfjs";
-import { getBtcData, IOHLCData } from "./services/currencyService";
+import { getCryptoData, IOHLCData, IPriceData } from "./services/currencyService";
 import { writeFile } from "./services/fileService";
-import { compileModel, modelPredict, trainModel } from "./services/lstmService";
+import { createModel, modelPredict, trainModel } from "./services/lstmService";
+import { prepareCryptoTrainingData } from "./services/trainingService";
+import { isTruthy } from "./util/util";
 
 // Hi, looks like you are running TensorFlow.js in Node.js. To speed things up dramatically, install our node backend, visit https://github.com/tensorflow/tfjs-node for more details. 
 const ai = async () => {
+    console.log("Stating.");
+    const start = performance.now();
 
-    // This example creates a stacked LSTM model with 2 layers, the first layer has 10 units and input shape of [30, 4] and returnSequences is set to true because it's the first layer and in the output of this layer we would like to use it as input for the next layer. The second layer has 8 units. The LSTM is then followed by a dense layer with 4 units, one for each of the open, high, low, and close values. The model is then compiled with the Adam optimizer and mean squared error as the loss function. The training data is preprocessed so that the last 31 days of data is used as the target values, and all other data is used as input values. Finally, the model is trained on the synthetic data using 10 epochs.
+    const { trainingData, targetData } = await prepareCryptoTrainingData("bitcoin", 720, 1611532800000, 1654041600000);
 
     // Define the model architecture
-    const model = await compileModel();
-    await trainModel(model);
+    const model = await createModel(trainingData.length);
 
-    console.log(await modelPredict(model, 420)); // 840
+    await trainModel(model, trainingData, targetData);
 
-    // console.log("Model:", model);
+    const prediction = await modelPredict(model, trainingData);
+    console.log("prediction:", prediction);
 
-    // Prepare the training data
-    let numOfDays = 7; // Maximum is 334
-    const trainingData: void | IOHLCData[] = await getBtcData(numOfDays + 31)
-        .then ((data) => {
-            writeFile(`./trainingDataFor${numOfDays}.json`, JSON.stringify(data));
-            return data;
-        })
-        .catch((err) => {
-            console.log("Failed getting training data. Status:", err.response.status, "Message:", err.message);
-        }) as IOHLCData[];
-
-    // The input data will be an array of OHLC values with a length equal to numOfDays.
-    // The expected output data will be a single OHLC value 31 days into the future.
-
-    // So I need to extract the numOfDays from the data and make it an array.
-    // Then I need to get 31 indexes later, the value of the the expected output.
-
-
-
-
-
+    console.log("Model took:", performance.now() - start, "ms");
     
-    // const tensor = convertToTensor(trainingData);
-    // const { inputs, labels } = tensor;
-    
-    // await trainModel(model, inputs, labels);
-
-    // console.log("trainingData:", trainingData);
-
-
-    // Every thing works until here, but then ChatGPT's code doesn't work below.
-    // Need to refactor the existing code to become a better stack, and to accept my input data.
-    // Then I need to train the model and figure out how to check it's output (if it works).
-
-
-
-    // // Create a new model with lstm Layer
-    // const LSTM = tf.layers.lstm({units: 4, returnSequences: true});
-    
-    // // Create a 3d tensor
-    // const x = tf.tensor([1, 2, 3, 4], [2, 2, 1]);
-    
-    // // Apply lstm layer to x
-    // const output = LSTM.apply(x);
-    // console.log("Model output:", output.print());
-
-
-
-
-
-    // const output = model.apply(x);
- 
-    // // Print output
-    // output.print()
-
-    // const xs = tf.tensor3d(trainingData.slice(0, -31).map(({open, high, low, close}) => [open, high, low, close]));
-    // const ys = tf.tensor3d(trainingData.slice(-31).map(({open, high, low, close}) => [open, high, low, close]));
-    // console.log(`got an xs: ${xs} and a ys: ${ys}`);
-
-    // // Train the model
-    // await model.fit(xs, ys, { epochs: 10 });
-
-
-        /*
-    const flatXs = trainingData.slice(0, -31).map(({open, high, low, close}) => [open, high, low, close]).flat();
-    console.log("Got a flatXs");
-
-    const flatYs = trainingData.slice(-31).map(({open, high, low, close}) => [open, high, low, close]).flat();
-    console.log("Got a flatYs");
-
-    const xs = tf.tensor3d(flatXs, [flatXs.length / 4, 30, 4]);
-    const ys = tf.tensor3d(flatYs, [flatYs.length / 4, 31, 4]);
-
-    console.log(`got an xs: ${xs} and a ys: ${ys}`);
-
-    // Train the model
-    await model.fit(xs, ys, { epochs: 10 });
+    /* The current code works, but it's got a shit prediction. Prediction should be as close to label as possible. 
+    Logs:
+        Model compiled!
+        Stating model training...
+        trainingData: [
+            number,
+            number,
+            number,
+        ]
+        label: 19407.447430262473
+        Model finished training!
+        Training took: 2.605909001082182 ms
+        Stating model prediction.
+        prediction: 0
     */
 
-    console.log("Done training!");
+    /*
+        The prediction output being 0 suggests that the model is not able to make accurate predictions. There could be several reasons for this:
+
+        The training data may not be representative of the problem you are trying to solve. The input data may not contain enough information for the model to learn from, or it may not be the right type of data for the problem.
+
+        The model architecture may not be suitable for the problem. The LSTM layer with 1 unit and input shape of [dataLength, 1] may not have enough capacity to learn the underlying patterns in the data.
+
+        The model may not have been trained for enough time. With only 1000000 epochs, the model may not have had enough time to converge to a good solution.
+
+        The optimization algorithm and loss function used may not be appropriate for the problem. 'sgd' and 'meanSquaredError' may not be the best choices for this specific problem
+
+        The input data preprocessing and normalization may not have been done properly.
+
+        It's important to note that without more information about the problem and the data, it's difficult to say for certain why the model is not making accurate predictions. It would be necessary to investigate further by visualizing the data, experimenting with different model architectures, and tweaking the training parameters to improve the model's performance.
+    */
 }
 ai();
 
