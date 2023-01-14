@@ -1,4 +1,3 @@
-import { isTruthy } from '../util/util';
 import { httpGet } from './httpService';
 
 /**
@@ -22,7 +21,7 @@ export interface IOHLCData {
 
 /**
  * Get Bitcoin data from coingecko.com
- * @param numOfDays number of days to get data for. Max is 720.
+ * @param numOfDays number of days to get data for. Max is 360.
  * @returns Promise<IOHLCData[]> - Array of IOHLCData.
  * @throws Error if response is undefined.
  *  @example
