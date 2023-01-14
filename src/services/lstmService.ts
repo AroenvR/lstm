@@ -35,10 +35,14 @@ export const trainModel = async (model: tf.Sequential, inputData: IPriceData[], 
     const ys = tf.tensor([trainingData], [1, trainingData.length, 1]);
     // console.info("ys shape:", ys.shape);
 
+    // TODO: This code has the major issue that it's wrongly predicting data right now.
+    // It probably trying to predict the last value in the training data.
+    // But it should be predicting the value of a new data point 31 days in the future.
+
     console.log("Bad training data prediction it might be getting:", trainingData[trainingData.length - 1]);
 
     // Fit model to the data
-    await model.fit(xs, ys, { epochs: 20 })
+    await model.fit(xs, ys, { epochs: 50 }) // TODO: 50 epochs takes about 25 seconds to train. Look into installing a node backend: https://github.com/tensorflow/tfjs-node for more details.
         .catch((err) => {
             console.error("Error fitting model:", err);
         });
