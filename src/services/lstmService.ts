@@ -1,10 +1,11 @@
 import * as tf from "@tensorflow/tfjs";
-import { isTruthy } from "../util/util";
 import { IPriceData } from "./currencyService";
 
 export const createModel = async (dataLength: number) => {
     const model = tf.sequential();
-    model.add(tf.layers.lstm({ units: 1, inputShape: [dataLength, 1] })); // 7 time steps, 1 feature
+    model.add(tf.layers.lstm({ units: 1, inputShape: [dataLength, 1], returnSequences: true })); // 7 time steps, 1 feature
+    model.add(tf.layers.lstm({ units: 1, inputShape: [dataLength, 1], returnSequences: true }));
+    model.add(tf.layers.dense({ units: 1 }));
     
     // SGD (Stochastic Gradient Descent) vs Adam (Adaptive Moment Estimation) optimizers:
     /* SGD updates the model parameters by moving in the opposite direction of the gradient of the loss function, with a fixed learning rate. It is relatively simple to implement and understand, but can be sensitive to the choice of learning rate. */
@@ -15,7 +16,7 @@ export const createModel = async (dataLength: number) => {
     return model;
 }
 
-export const trainModel = async (model: tf.Sequential,inputData: IPriceData[], targetOutput: IPriceData) => {
+export const trainModel = async (model: tf.Sequential, inputData: IPriceData[], targetOutput: IPriceData) => {
     console.log("Stating model training...");
     console.info("data length:", inputData.length);
 
@@ -31,11 +32,13 @@ export const trainModel = async (model: tf.Sequential,inputData: IPriceData[], t
     const xs = tf.tensor(trainingData, [1, trainingData.length, 1]);
     // console.info("xs shape:", xs.shape);
 
-    const ys = tf.tensor([label], [1, 1]); // batch size, time steps, features
+    const ys = tf.tensor([trainingData], [1, trainingData.length, 1]);
     // console.info("ys shape:", ys.shape);
 
+    console.log("Bad training data prediction it might be getting:", trainingData[trainingData.length - 1]);
+
     // Fit model to the data
-    model.fit(xs, ys, { epochs: 1000000000 })
+    await model.fit(xs, ys, { epochs: 20 })
         .catch((err) => {
             console.error("Error fitting model:", err);
         });
