@@ -4,21 +4,25 @@ import { writeFile } from "./services/fileService";
 import { createModel, modelPredict, trainModel } from "./services/lstmService";
 import { prepareCryptoTrainingData } from "./services/trainingService";
 import { isTruthy } from "./util/util";
+import btc_input_data from "./json_files/btc_input_data.json";
+import btc_label_data from "./json_files/btc_label_data.json";
+import btc_prediction_data from "./json_files/btc_prediction_data.json";
 
 // Hi, looks like you are running TensorFlow.js in Node.js. To speed things up dramatically, install our node backend, visit https://github.com/tensorflow/tfjs-node for more details. 
 const ai = async () => {
     console.log("Stating.");
     const start = performance.now();
 
-    const { trainingData, targetData } = await prepareCryptoTrainingData("bitcoin", 720, 1611532800000, 1654041600000);
+    // const { trainingData, targetData } = await prepareCryptoTrainingData("bitcoin", 720, 1611532800000, 1654041600000);
 
     // Define the model architecture
-    const model = await createModel(trainingData.length);
+    const model = await createModel(btc_input_data.length);
 
-    await trainModel(model, trainingData, targetData);
+    await trainModel(model, btc_input_data, btc_label_data);
 
-    const prediction = await modelPredict(model, trainingData);
-    console.log("prediction:", prediction);
+    const prediction = await modelPredict(model, btc_prediction_data);
+    console.log("Number we're trying to predict:", 19941.780543296303);
+    console.log("Model prediction:", prediction);
 
     console.log("Model took:", performance.now() - start, "ms");
     
