@@ -8,6 +8,7 @@ import btc_input_data from "./json_files/btc_input_data.json";
 import btc_label_data from "./json_files/btc_label_data.json";
 import btc_prediction_data from "./json_files/btc_prediction_data.json";
 import eth_prediction_data from "./json_files/eth_prediction_data.json";
+import new_btc_training_data from "./json_files/new_btc_training_data.json";
 
 // Hi, looks like you are running TensorFlow.js in Node.js. To speed things up dramatically, install our node backend, visit https://github.com/tensorflow/tfjs-node for more details. 
 const ai = async () => {
@@ -15,7 +16,6 @@ const ai = async () => {
     const start = performance.now();
 
     // const { trainingData, targetData } = await prepareCryptoTrainingData("bitcoin", 720, 1611532800000, 1654041600000);
-
 
     // Create and compile a model:
     const model = await createModel(btc_input_data.length);
@@ -40,8 +40,45 @@ const ai = async () => {
 ai();
 
 const getData = async () => {
+    /* coins/{id}/market_chart
+        {
+            "prices": [
+                [1673395200000, 17436.90232978116],
+            ],
+            "market_caps": [
+                [1673395200000, 335743942932.3494],
+            ],
+            "total_volumes": [
+                [1673395200000, 21858206845.29233],
+            ]
+        }
+    */
+
+   /* coins/{id}/ohlc
+        [
+            1594382400000 (time),
+            1.1 (open),
+            2.2 (high),
+            3.3 (low),
+            4.4 (close)
+        ]
+   */
+
+    /*
+        Format to:
+        {
+            time: 1594382400000,
+            open: 1.1,
+            high: 2.2,
+            low: 3.3,
+            close: 4.4
+            market_cap: 335743942932.3494,
+            total_volume: 21858206845.29233
+        }
+    */
+
     const data = await getCryptoData("ethereum", 730);
-    console.log(data);
+    console.log("getData:", data);
 
     writeToFile("730_daily_eth.json", data);
 }
